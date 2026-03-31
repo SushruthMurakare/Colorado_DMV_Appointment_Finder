@@ -15,6 +15,9 @@ from datetime import datetime
 from typing import Optional
 import asyncio
 
+from datetime import datetime, timedelta
+from typing import Optional
+
 from dmv import search_offices, VALID_TYPES, OFFICES
 
 app = FastAPI(title="Colorado DMV Appointment Finder", version="1.0.0")
@@ -52,6 +55,9 @@ def get_offices():
     return {"offices": [{"id": o["id"], "name": o["name"], "address": o["address"]} for o in OFFICES]}
 
 
+_cache: dict = {}
+CACHE_TTL_MINUTES = 15
+
 @app.get("/api/search")
 async def search(
     type: str = Query(..., description="Appointment type, e.g. 'Written Test'"),
@@ -59,9 +65,7 @@ async def search(
 ):
     """
     Search for the earliest available appointment across all (or one) offices.
-
-    Returns a list of office results sorted by earliest_date ascending,
-    with offices that have no availability at the end.
+    Results are cached for 15 minutes per (type, office) pair to avoid hammering the DMV site.
     """
     if type not in VALID_TYPES:
         raise HTTPException(
@@ -69,21 +73,33 @@ async def search(
             detail=f"Invalid type. Must be one of: {VALID_TYPES}"
         )
 
+    cache_key = (type, office)
+    if cache_key in _cache:
+        cached_at, data = _cache[cache_key]
+        if datetime.utcnow() - cached_at < timedelta(minutes=CACHE_TTL_MINUTES):
+            return JSONResponse({**data, "cached": True, "cached_at": cached_at.isoformat()})
+
     results = await search_offices(type, office_filter=office)
 
-    found   = sorted(
+    found = sorted(
         [r for r in results if r["earliest_date"]],
         key=lambda r: r["earliest_date"]
     )
     no_date = [r for r in results if not r["earliest_date"]]
 
-    return JSONResponse({
-        "type":         type,
-        "searched":     len(results),
-        "available":    len(found),
-        "results":      [serialize_result(r) for r in found],
-        "unavailable":  [serialize_result(r) for r in no_date],
-    })
+    response_data = {
+        "type":        type,
+        "searched":    len(results),
+        "available":   len(found),
+        "results":     [serialize_result(r) for r in found],
+        "unavailable": [serialize_result(r) for r in no_date],
+        "cached":      False,
+        "cached_at":   datetime.utcnow().isoformat(),
+    }
+
+    _cache[cache_key] = (datetime.utcnow(), response_data)
+
+    return JSONResponse(response_data)
 
 
 @app.get("/api/health")
