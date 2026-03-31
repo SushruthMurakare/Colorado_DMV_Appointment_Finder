@@ -11,18 +11,52 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
-from datetime import datetime
-from typing import Optional
-import asyncio
-
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Optional
+import asyncio
+import os
+import httpx
 
 from dmv import search_offices, VALID_TYPES, OFFICES
 
-app = FastAPI(title="Colorado DMV Appointment Finder", version="1.0.0")
 
-# Allow local dev (e.g. Vite / live-server on a different port)
+# ── Keep-alive (prevents Render free tier from spinning down) ─────────────────
+# Add RENDER_EXTERNAL_URL in your Render dashboard environment variables:
+#   RENDER_EXTERNAL_URL = https://your-app-name.onrender.com
+# Has no effect locally (variable won't be set).
+
+PING_INTERVAL = 13 * 60  # 10 min — Render spins down after 15 min of inactivity
+
+
+async def _keep_alive():
+    base_url = os.getenv("RENDER_EXTERNAL_URL")
+    if not base_url:
+        return
+    ping_url = base_url.rstrip("/") + "/api/health"
+    async with httpx.AsyncClient() as client:
+        while True:
+            await asyncio.sleep(PING_INTERVAL)
+            try:
+                await client.get(ping_url, timeout=10)
+            except Exception:
+                pass  # silently retry next cycle
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    asyncio.create_task(_keep_alive())
+    yield
+
+
+# ── App ───────────────────────────────────────────────────────────────────────
+
+app = FastAPI(
+    title="Colorado DMV Appointment Finder",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -45,18 +79,17 @@ def serialize_result(r: dict) -> dict:
 
 @app.get("/api/types")
 def get_types():
-    """Return the list of valid appointment types."""
     return {"types": VALID_TYPES}
 
 
 @app.get("/api/offices")
 def get_offices():
-    """Return all office names and addresses."""
     return {"offices": [{"id": o["id"], "name": o["name"], "address": o["address"]} for o in OFFICES]}
 
 
 _cache: dict = {}
-CACHE_TTL_MINUTES = 15
+CACHE_TTL_MINUTES = 60  # ← bumped from 15 to 60
+
 
 @app.get("/api/search")
 async def search(
@@ -65,7 +98,7 @@ async def search(
 ):
     """
     Search for the earliest available appointment across all (or one) offices.
-    Results are cached for 15 minutes per (type, office) pair to avoid hammering the DMV site.
+    Results are cached for 60 minutes per (type, office) pair.
     """
     if type not in VALID_TYPES:
         raise HTTPException(
@@ -108,6 +141,4 @@ def health():
 
 
 # ── Serve the frontend ────────────────────────────────────────────────────────
-# Must be registered AFTER API routes so /api/* isn't swallowed.
-# Place your index.html (and any other assets) inside the static/ folder.
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
