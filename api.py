@@ -68,10 +68,14 @@ app.add_middleware(
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def serialize_result(r: dict) -> dict:
-    """Convert a result dict to JSON-safe form (datetime → ISO string)."""
     out = {k: v for k, v in r.items()}
     if isinstance(out.get("earliest_date"), datetime):
         out["earliest_date"] = out["earliest_date"].isoformat()
+    if isinstance(out.get("available_dates"), list):
+        out["available_dates"] = [
+            d.isoformat() if isinstance(d, datetime) else d
+            for d in out["available_dates"]
+        ]
     return out
 
 
@@ -114,20 +118,36 @@ async def search(
 
     results = await search_offices(type, office_filter=office)
 
-    found = sorted(
-        [r for r in results if r["earliest_date"]],
-        key=lambda r: r["earliest_date"]
-    )
+    found   = [r for r in results if r["earliest_date"]]
     no_date = [r for r in results if not r["earliest_date"]]
 
+    # by_office: one entry per office sorted by earliest slot
+    by_office = sorted(found, key=lambda r: r["earliest_date"])
+
+    # top_slots: all slots within the next 7 days across all offices, capped at 50
+    now      = datetime.utcnow()
+    week_end = now + timedelta(days=7)
+    flat = []
+    for r in found:
+        for dt in r["available_dates"]:
+            if dt <= week_end:
+                flat.append({
+                    "name":          r["name"],
+                    "address":       r["address"],
+                    "earliest_date": dt,
+                })
+    flat.sort(key=lambda x: x["earliest_date"])
+    top_slots = flat[:50]
+
     response_data = {
-        "type":        type,
-        "searched":    len(results),
-        "available":   len(found),
-        "results":     [serialize_result(r) for r in found],
+        "type":      type,
+        "searched":  len(results),
+        "available": len(found),
+        "by_office": [serialize_result(r) for r in by_office],
+        "top_slots": [serialize_result(s) for s in top_slots],
         "unavailable": [serialize_result(r) for r in no_date],
-        "cached":      False,
-        "cached_at":   datetime.utcnow().isoformat(),
+        "cached":    False,
+        "cached_at": datetime.utcnow().isoformat(),
     }
 
     _cache[cache_key] = (datetime.utcnow(), response_data)

@@ -143,7 +143,7 @@ def parse_appointment_types(html: str) -> list:
     return types
 
 
-def parse_earliest_date(html: str) -> Optional[datetime]:
+def parse_available_dates(html: str) -> list[datetime]:
     candidates = []
 
     for m in re.finditer(r'data-datetime="(\d{1,2}/\d{1,2}/\d{4}[^"]+)"', html):
@@ -173,11 +173,11 @@ def parse_earliest_date(html: str) -> Optional[datetime]:
                 pass
 
     if not candidates:
-        return None
+        return []
 
     today  = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    future = [d for d in candidates if d >= today]
-    return min(future) if future else min(candidates)
+    future = sorted(set(d for d in candidates if d >= today))
+    return future if future else sorted(set(candidates))
 
 
 # ── Sub-unit detection (offices like Westgate with an extra category page) ─────
@@ -255,7 +255,7 @@ async def _post_unit(session, html: str, unit_id: str, debug: bool, label: str) 
 # ── Core: check one office ────────────────────────────────────────────────────
 
 async def check_office(office: dict, appt_type_name: str, debug: bool = False) -> dict:
-    result = {**office, "earliest_date": None, "matched_type": None, "error": None}
+    result = {**office, "earliest_date": None, "available_dates": [], "matched_type": None, "error": None}
 
     connector = aiohttp.TCPConnector(ssl=False)
     timeout   = aiohttp.ClientTimeout(total=45)
@@ -362,9 +362,10 @@ async def check_office(office: dict, appt_type_name: str, debug: bool = False) -
                 hits = re.findall(r'data-datetime="([^"]+)"', calendar_html)
                 print(f"[{office['name']}] data-datetime hits: {hits[:5]}")
 
-            earliest = parse_earliest_date(calendar_html)
-            result["earliest_date"] = earliest
-            if not earliest:
+            available = parse_available_dates(calendar_html)
+            result["available_dates"] = available
+            result["earliest_date"] = available[0] if available else None
+            if not available:
                 result["error"] = "No available dates found (office may be fully booked)"
 
         except Exception as e:
