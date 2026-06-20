@@ -208,6 +208,40 @@
   .error-title { font-size: 13.5px; font-weight: 600; color: #a33030; margin-bottom: 4px; }
   .error-msg { font-size: 13px; color: #7a3030; margin-bottom: 12px; }
 
+  .view-toggle {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .toggle-pill {
+    display: inline-flex;
+    background: #ebebeb;
+    border-radius: 100px;
+    padding: 3px;
+    gap: 0;
+  }
+
+  .toggle-pill button {
+    background: transparent;
+    border: none;
+    border-radius: 100px;
+    padding: 7px 18px;
+    font-size: 12.5px;
+    font-family: inherit;
+    font-weight: 500;
+    color: #888;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+
+  .toggle-pill button.active {
+    background: #fff;
+    color: #111;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  }
+
   .hidden { display: none !important; }
 </style>
 </head>
@@ -284,25 +318,57 @@
 
   <!-- Results -->
   <div class="hidden" id="resultsSection">
-    <div class="results-header">
-      <span class="results-title" id="resultsTitle"></span>
-      <span class="results-count" id="resultsCount"></span>
+
+    <!-- Toggle -->
+    <div class="view-toggle">
+      <div class="toggle-pill">
+        <button id="toggleTop30" class="active" onclick="switchView('top30')">Next few days</button>
+        <button id="toggleByOffice" onclick="switchView('byOffice')">By Office</button>
+      </div>
     </div>
-    <table>
-      <thead>
-        <tr>
-          <th style="width:28px">#</th>
-          <th>Office</th>
-          <th>Earliest available</th>
-          <th style="text-align:right">Days away</th>
-        </tr>
-      </thead>
-      <tbody id="resultsBody"></tbody>
-    </table>
-    <div class="no-avail hidden" id="noAvailSection">
-      <p class="no-avail-label">No availability or errors</p>
-      <div class="chips" id="noAvailChips"></div>
+
+    <!-- Top 30 view -->
+    <div id="viewTop30">
+      <div class="results-header">
+        <span class="results-title" id="top30Title"></span>
+        <span class="results-count" id="top30Count"></span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:28px">#</th>
+            <th>Office</th>
+            <th>Slot</th>
+            <th style="text-align:right">Days away</th>
+          </tr>
+        </thead>
+        <tbody id="top30Body"></tbody>
+      </table>
     </div>
+
+    <!-- By Office view -->
+    <div id="viewByOffice" class="hidden">
+      <div class="results-header">
+        <span class="results-title" id="byOfficeTitle"></span>
+        <span class="results-count" id="byOfficeCount"></span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:28px">#</th>
+            <th>Office</th>
+            <th>Slot</th>
+            <th style="text-align:right">Days away</th>
+          </tr>
+        </thead>
+        <tbody id="byOfficeBody"></tbody>
+      </table>
+      <div class="no-avail hidden" id="noAvailSection">
+        <p class="no-avail-label">No availability or errors</p>
+        <div class="chips" id="noAvailChips"></div>
+      </div>
+    </div>
+
     <hr class="divider">
     <button class="btn-ghost" onclick="resetSearch()">← New search</button>
   </div>
@@ -317,6 +383,7 @@
 </div>
 <script>
   let selectedType = null;
+  let currentView  = 'top30';
 
   function selectCard(el) {
     document.querySelectorAll('.appt-card').forEach(c => c.classList.remove('selected'));
@@ -334,12 +401,39 @@
     show('selectionSection');
   }
 
+  function switchView(view) {
+    currentView = view;
+    if (view === 'top30') {
+      show('viewTop30'); hide('viewByOffice');
+      document.getElementById('toggleTop30').classList.add('active');
+      document.getElementById('toggleByOffice').classList.remove('active');
+    } else {
+      hide('viewTop30'); show('viewByOffice');
+      document.getElementById('toggleByOffice').classList.add('active');
+      document.getElementById('toggleTop30').classList.remove('active');
+    }
+  }
+
   function daysBadge(days) {
     if (days === 0) return '<span class="badge badge-today">Today</span>';
     if (days <= 14) return `<span class="badge badge-soon">${days}d</span>`;
     if (days <= 30) return `<span class="badge badge-med">${days}d</span>`;
     return `<span class="badge badge-far">${days}d</span>`;
   }
+
+  function formatDate(isoStr) {
+    const date = new Date(isoStr);
+    return {
+      date,
+      days: Math.round((date - _today) / 86400000),
+      str:  date.toLocaleString('en-US', {
+        weekday: 'short', month: 'short', day: 'numeric',
+        hour: 'numeric', minute: '2-digit'
+      })
+    };
+  }
+
+  let _today;
 
   async function runSearch() {
     if (!selectedType) return;
@@ -363,28 +457,45 @@
   }
 
   function displayResults(data) {
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    document.getElementById('resultsTitle').textContent = data.type;
-    document.getElementById('resultsCount').textContent =
+    _today = new Date(); _today.setHours(0, 0, 0, 0);
+
+    // ── Top 30 view ──
+    document.getElementById('top30Title').textContent = data.type;
+    document.getElementById('top30Count').textContent =
+      data.top_slots.length + ' earliest slots available';
+
+    const top30Body = document.getElementById('top30Body');
+    top30Body.innerHTML = '';
+    if (!data.top_slots.length) {
+      top30Body.innerHTML = '<tr><td colspan="4" style="padding:20px 0;font-size:14px;color:#aaa;background:#f7f7f5">No availability found at this time.</td></tr>';
+    } else {
+      data.top_slots.forEach((s, i) => {
+        const { days, str } = formatDate(s.earliest_date);
+        top30Body.innerHTML += `<tr>
+          <td class="rank">${i + 1}</td>
+          <td><div class="office-name">${s.name}</div><div class="office-addr">${s.address}</div></td>
+          <td class="date-cell">${str}</td>
+          <td>${daysBadge(days)}</td>
+        </tr>`;
+      });
+    }
+
+    // ── By Office view ──
+    document.getElementById('byOfficeTitle').textContent = data.type;
+    document.getElementById('byOfficeCount').textContent =
       data.available + ' of ' + data.searched + ' offices have availability';
 
-    const tbody = document.getElementById('resultsBody');
-    tbody.innerHTML = '';
-
-    if (!data.results.length) {
-      tbody.innerHTML = '<tr><td colspan="4" style="padding:20px 0;font-size:14px;color:#aaa;background:#f7f7f5">No availability found at this time.</td></tr>';
+    const byOfficeBody = document.getElementById('byOfficeBody');
+    byOfficeBody.innerHTML = '';
+    if (!data.by_office.length) {
+      byOfficeBody.innerHTML = '<tr><td colspan="4" style="padding:20px 0;font-size:14px;color:#aaa;background:#f7f7f5">No availability found at this time.</td></tr>';
     } else {
-      data.results.forEach((r, i) => {
-        const date = new Date(r.earliest_date);
-        const days = Math.round((date - today) / 86400000);
-        const dateStr = date.toLocaleString('en-US', {
-          weekday: 'short', month: 'short', day: 'numeric',
-          hour: 'numeric', minute: '2-digit'
-        });
-        tbody.innerHTML += `<tr>
+      data.by_office.forEach((r, i) => {
+        const { days, str } = formatDate(r.earliest_date);
+        byOfficeBody.innerHTML += `<tr>
           <td class="rank">${i + 1}</td>
           <td><div class="office-name">${r.name}</div><div class="office-addr">${r.address}</div></td>
-          <td class="date-cell">${dateStr}</td>
+          <td class="date-cell">${str}</td>
           <td>${daysBadge(days)}</td>
         </tr>`;
       });
@@ -400,6 +511,8 @@
     } else {
       hide('noAvailSection');
     }
+
+    switchView('top30');
     show('resultsSection');
   }
 </script>
