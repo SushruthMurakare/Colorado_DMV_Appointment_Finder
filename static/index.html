@@ -243,28 +243,184 @@
   }
 
   .hidden { display: none !important; }
+
+  .footer {
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #ebebeb;
+    text-align: center;
+    font-size: 12px;
+    color: #bbb;
+  }
+
+  .footer a {
+    color: #999;
+    text-decoration: none;
+  }
+
+  .footer a:hover { color: #1a5fa8; }
+
+  tbody tr.clickable { cursor: pointer; }
+  tbody tr.clickable:hover td { background: #eaf1fb; }
+
+  /* Booking modal */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100;
+    padding: 1rem;
+  }
+
+  .modal {
+    background: #fff;
+    border-radius: 14px;
+    padding: 24px 24px 20px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  }
+
+  .modal-eyebrow {
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #aaa;
+    margin-bottom: 6px;
+  }
+
+  .modal-office {
+    font-size: 17px;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 4px;
+  }
+
+  .modal-addr {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 16px;
+  }
+
+  .modal-steps {
+    background: #f7f7f5;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 18px;
+  }
+
+  .modal-steps p {
+    font-size: 12.5px;
+    color: #555;
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+
+  .modal-steps p:last-child { margin-bottom: 0; }
+
+  .modal-steps strong { color: #111; }
+
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+  .modal-divider { border: none; border-top: 1px solid #ebebeb; margin: 16px 0; }
+
+  .btn-link {
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 12.5px;
+    color: #1a5fa8;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .btn-link:hover { text-decoration: underline; }
+
+  /* Alert modal */
+  .alert-modal { max-width: 460px; }
+
+  .alert-form { display: flex; flex-direction: column; gap: 14px; margin-top: 16px; }
+
+  .alert-field { display: flex; flex-direction: column; gap: 5px; }
+
+  .alert-field label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #aaa;
+  }
+
+  .alert-field input,
+  .alert-field select {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 13.5px;
+    font-family: inherit;
+    color: #111;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.15s;
+    appearance: none;
+  }
+
+  .alert-field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aaa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  .alert-field input:focus,
+  .alert-field select:focus { border-color: #1a5fa8; }
+
+  .alert-hint { font-size: 11.5px; color: #aaa; margin-top: 2px; }
+
+  .alert-feedback-success {
+    font-size: 13px;
+    color: #2d6a4f;
+    background: #e6f4ea;
+    border-radius: 8px;
+    padding: 11px 14px;
+    text-align: center;
+  }
+
+  .alert-feedback-error {
+    font-size: 12.5px;
+    color: #a33030;
+    background: #fdecea;
+    border-radius: 8px;
+    padding: 9px 12px;
+  }
+
+  .alert-btn-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+
+  .bell-btn {
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 12.5px;
+    font-family: inherit;
+    color: #555;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .bell-btn:hover { border-color: #1a5fa8; color: #1a5fa8; }
 </style>
 </head>
 <body>
 <div class="page">
 
   <div class="co-flag-badge">
-    <!--
-      Colorado flag — 2:3 ratio (90×60 viewBox):
-      - Two outer BLUE stripes, white middle stripe
-      - RED C, centered vertically, positioned 1/5 from left
-      - GOLD disk fills the interior of the C
-    -->
-    <svg width="48" height="32" viewBox="0 0 90 60" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0" y="0"  width="90" height="20" fill="#003087"/>
-      <rect x="0" y="20" width="90" height="20" fill="#ffffff"/>
-      <rect x="0" y="40" width="90" height="20" fill="#003087"/>
-      <!-- Gold disk inside the C -->
-      <circle cx="27" cy="30" r="11" fill="#FFD700"/>
-      <!-- Red C: thick arc, open on the right -->
-      <path d="M 38.5,17.4 A 14.5,14.5 0 1,0 38.5,42.6"
-            fill="none" stroke="#BF0A30" stroke-width="7" stroke-linecap="butt"/>
-    </svg>
+    <img src="/Flag_of_Colorado.svg.png" alt="Colorado flag" width="48" height="32" style="display:block;border-radius:3px;object-fit:cover;">
     <span class="co-flag-label">Colorado DMV</span>
   </div>
 
@@ -307,6 +463,7 @@
     <div class="search-row">
       <button class="btn-primary" id="searchBtn" onclick="runSearch()" disabled>Search all offices</button>
       <span class="search-hint" id="searchHint">Select a type above</span>
+      <button class="bell-btn" onclick="openAlertModal()" style="margin-left:auto">🔔 Set slot alert</button>
     </div>
   </div>
 
@@ -373,6 +530,74 @@
     <button class="btn-ghost" onclick="resetSearch()">← New search</button>
   </div>
 
+  <!-- Booking modal -->
+  <div class="modal-backdrop hidden" id="bookingModal" onclick="closeModal(event)">
+    <div class="modal">
+      <p class="modal-eyebrow">Book appointment</p>
+      <p class="modal-office" id="modalOfficeName"></p>
+      <p class="modal-addr" id="modalOfficeAddr"></p>
+      <div class="modal-steps">
+        <p>On the DMV site you'll need to:</p>
+        <p>1. Select <strong id="modalStep1"></strong></p>
+        <p>2. Select <strong id="modalStep2"></strong></p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" onclick="openBooking()">Open booking site →</button>
+      </div>
+
+      <hr class="modal-divider">
+      <div style="text-align:center">
+        <button class="btn-link" onclick="openAlertModalPrefilled()">🔔 Set an alert for this office</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert modal -->
+  <div class="modal-backdrop hidden" id="alertModal" onclick="closeAlertModal(event)">
+    <div class="modal alert-modal">
+      <p class="modal-eyebrow">Slot alert</p>
+      <p style="font-size:15px;font-weight:700;color:#111;margin:4px 0 2px">Notify me when a slot opens</p>
+      <p style="font-size:12.5px;color:#888;margin:0">We'll email you once and remove you from the list.</p>
+
+      <div id="alertFormWrap">
+        <div class="alert-form">
+          <div class="alert-field">
+            <label>Your name</label>
+            <input type="text" id="alertName" placeholder="Jane Smith" autocomplete="name">
+          </div>
+          <div class="alert-field">
+            <label>Email address</label>
+            <input type="email" id="alertEmail" placeholder="you@example.com" autocomplete="email">
+          </div>
+          <div class="alert-field">
+            <label>Office <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+            <select id="alertOffice"></select>
+          </div>
+          <div class="alert-field">
+            <label>Appointment type</label>
+            <select id="alertType">
+              <option value="">Select…</option>
+              <option value="Written Test">Written test</option>
+              <option value="CDL Written Test">CDL written test</option>
+              <option value="First Time CO DL/ID/Permit">First time CO DL / ID / permit</option>
+              <option value="Renew Colorado Driver License/ID/Permit">Renew DL / ID / permit</option>
+            </select>
+          </div>
+          <div class="alert-field">
+            <label>Alert deadline <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional — stop alerting after this date)</span></label>
+            <input type="date" id="alertBeforeDate">
+          </div>
+          <div id="alertFeedback"></div>
+          <div class="alert-btn-row">
+            <button class="btn-ghost" onclick="closeAlertModal()">Cancel</button>
+            <button class="btn-primary" id="alertSubmitBtn" onclick="submitAlert()">Set alert</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Error -->
   <div class="error-box hidden" id="errorSection">
     <p class="error-title">Could not fetch results</p>
@@ -380,10 +605,18 @@
     <button class="btn-ghost" onclick="resetSearch()">Try again</button>
   </div>
 
+  <div class="footer">
+    Found a bug or have a suggestion?
+    <a href="mailto:sushruth_rao@mines.edu?subject=Colorado%20DMV%20Finder%20%E2%80%93%20Feedback">Send feedback</a>
+  </div>
+
 </div>
 <script>
-  let selectedType = null;
-  let currentView  = 'top30';
+  const BOOKING_URL = 'https://coloradoappt.cxmflow.com/Appointment/Index/d74f48b1-33a9-428c-acd1-d7d1bfc9555c';
+
+  let selectedType        = null;
+  let currentView         = 'top30';
+  let currentModalOfficeId = null;
 
   function selectCard(el) {
     document.querySelectorAll('.appt-card').forEach(c => c.classList.remove('selected'));
@@ -399,6 +632,149 @@
   function resetSearch() {
     ['resultsSection', 'errorSection', 'loadingSection'].forEach(hide);
     show('selectionSection');
+  }
+
+  function openOfficeModal(name, addr, officeId) {
+    currentModalOfficeId = officeId;
+    document.getElementById('modalOfficeName').textContent = name;
+    document.getElementById('modalOfficeAddr').textContent = addr;
+    document.getElementById('modalStep1').textContent = name;
+    document.getElementById('modalStep2').textContent = selectedType;
+    show('bookingModal');
+  }
+
+  function closeModal(e) {
+    if (e && e.target !== document.getElementById('bookingModal')) return;
+    hide('bookingModal');
+  }
+
+  function openBooking() {
+    window.open(BOOKING_URL, '_blank', 'noopener');
+    hide('bookingModal');
+  }
+
+  const OFFICES_LIST = [
+    {id:81,  name:"Adams"},
+    {id:15,  name:"Alamosa"},
+    {id:10,  name:"Aurora"},
+    {id:85,  name:"Boulder"},
+    {id:16,  name:"Canon City"},
+    {id:14,  name:"Centennial"},
+    {id:19,  name:"Colorado Springs"},
+    {id:31,  name:"Cortez"},
+    {id:32,  name:"Craig"},
+    {id:45,  name:"Delta"},
+    {id:12,  name:"Denver NE"},
+    {id:91,  name:"Denver Regional"},
+    {id:33,  name:"Durango"},
+    {id:24,  name:"Fort Collins"},
+    {id:25,  name:"Fort Morgan"},
+    {id:34,  name:"Frisco"},
+    {id:35,  name:"Glenwood Springs"},
+    {id:13,  name:"Golden"},
+    {id:36,  name:"Grand Junction"},
+    {id:27,  name:"Greeley"},
+    {id:39,  name:"Gunnison"},
+    {id:17,  name:"La Junta"},
+    {id:18,  name:"Lamar"},
+    {id:92,  name:"Longmont (new)"},
+    {id:28,  name:"Longmont (old)"},
+    {id:29,  name:"Loveland"},
+    {id:51,  name:"Meeker"},
+    {id:37,  name:"Montrose"},
+    {id:20,  name:"Parker"},
+    {id:21,  name:"Pueblo"},
+    {id:47,  name:"Salida"},
+    {id:38,  name:"Steamboat Springs"},
+    {id:26,  name:"Sterling"},
+    {id:22,  name:"Trinidad"},
+    {id:86,  name:"Westgate"},
+    {id:44,  name:"Westminster"},
+  ];
+
+  function _populateOfficeDropdown(selectedId) {
+    const sel = document.getElementById('alertOffice');
+    sel.innerHTML = '<option value="">Any office (earliest statewide)</option>';
+    OFFICES_LIST.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = o.id;
+      opt.textContent = o.name;
+      if (o.id === selectedId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  function _resetAlertModal() {
+    document.getElementById('alertName').value = '';
+    document.getElementById('alertEmail').value = '';
+    document.getElementById('alertBeforeDate').value = '';
+    document.getElementById('alertFeedback').innerHTML = '';
+    const btn = document.getElementById('alertSubmitBtn');
+    btn.disabled = false;
+    btn.textContent = 'Set alert';
+    show('alertFormWrap');
+  }
+
+  function openAlertModal() {
+    _resetAlertModal();
+    _populateOfficeDropdown(null);
+    document.getElementById('alertType').value = selectedType || '';
+    hide('bookingModal');
+    show('alertModal');
+  }
+
+  function openAlertModalPrefilled() {
+    _resetAlertModal();
+    _populateOfficeDropdown(currentModalOfficeId);
+    document.getElementById('alertType').value = selectedType || '';
+    hide('bookingModal');
+    show('alertModal');
+  }
+
+  function closeAlertModal(e) {
+    if (e && e.target !== document.getElementById('alertModal')) return;
+    hide('alertModal');
+  }
+
+  async function submitAlert() {
+    const name = document.getElementById('alertName').value.trim();
+    const email = document.getElementById('alertEmail').value.trim();
+    const officeEl = document.getElementById('alertOffice');
+    const officeIdRaw = officeEl.value;
+    const officeId = officeIdRaw ? parseInt(officeIdRaw, 10) : null;
+    const officeName = officeId ? officeEl.options[officeEl.selectedIndex]?.text || null : null;
+    const apptType = document.getElementById('alertType').value;
+    const beforeDate = document.getElementById('alertBeforeDate').value || null;
+    const feedback = document.getElementById('alertFeedback');
+    const btn = document.getElementById('alertSubmitBtn');
+
+    if (!name) { feedback.innerHTML = '<p class="alert-feedback-error">Please enter your name.</p>'; return; }
+    if (!email) { feedback.innerHTML = '<p class="alert-feedback-error">Please enter your email.</p>'; return; }
+    if (!apptType) { feedback.innerHTML = '<p class="alert-feedback-error">Please select an appointment type.</p>'; return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Setting up…';
+    feedback.innerHTML = '';
+
+    const officeDisplay = officeName || 'any Colorado office';
+
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, appt_type: apptType, office_id: officeId, office_name: officeName, before_date: beforeDate }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || 'Something went wrong');
+      }
+      feedback.innerHTML = `<p class="alert-feedback-success">✓ Alert set, ${name}! We'll email you at <strong>${email}</strong> when an earlier slot opens at <strong>${officeDisplay}</strong>.</p>`;
+      btn.textContent = 'Alert set ✓';
+    } catch (err) {
+      feedback.innerHTML = `<p class="alert-feedback-error">${err.message}</p>`;
+      btn.disabled = false;
+      btn.textContent = 'Set alert';
+    }
   }
 
   function switchView(view) {
@@ -471,7 +847,8 @@
     } else {
       data.top_slots.forEach((s, i) => {
         const { days, str } = formatDate(s.earliest_date);
-        top30Body.innerHTML += `<tr>
+        const n = s.name.replace(/'/g, "\\'"), a = s.address.replace(/'/g, "\\'");
+        top30Body.innerHTML += `<tr class="clickable" onclick="openOfficeModal('${n}','${a}',${s.id})">
           <td class="rank">${i + 1}</td>
           <td><div class="office-name">${s.name}</div><div class="office-addr">${s.address}</div></td>
           <td class="date-cell">${str}</td>
@@ -492,7 +869,8 @@
     } else {
       data.by_office.forEach((r, i) => {
         const { days, str } = formatDate(r.earliest_date);
-        byOfficeBody.innerHTML += `<tr>
+        const n = r.name.replace(/'/g, "\\'"), a = r.address.replace(/'/g, "\\'");
+        byOfficeBody.innerHTML += `<tr class="clickable" onclick="openOfficeModal('${n}','${a}',${r.id})">
           <td class="rank">${i + 1}</td>
           <td><div class="office-name">${r.name}</div><div class="office-addr">${r.address}</div></td>
           <td class="date-cell">${str}</td>

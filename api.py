@@ -7,18 +7,24 @@ Run:
 Then open http://localhost:8000 in your browser.
 """
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Optional
+from pydantic import BaseModel
 import asyncio
+import re
 import os
 import httpx
 
 from dmv import search_offices, VALID_TYPES, OFFICES
+from notifications import create_subscription, deactivate_subscription, run_poller
 
 
 # ── Keep-alive (prevents Render free tier from spinning down) ─────────────────
@@ -46,6 +52,7 @@ async def _keep_alive():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     asyncio.create_task(_keep_alive())
+    asyncio.create_task(run_poller())
     yield
 
 
@@ -132,6 +139,7 @@ async def search(
         for dt in r["available_dates"]:
             if dt <= week_end:
                 flat.append({
+                    "id":            r["id"],
                     "name":          r["name"],
                     "address":       r["address"],
                     "earliest_date": dt,
@@ -153,6 +161,60 @@ async def search(
     _cache[cache_key] = (datetime.utcnow(), response_data)
 
     return JSONResponse(response_data)
+
+
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+_OFFICE_IDS = {o["id"] for o in OFFICES}
+
+
+class SubscribeBody(BaseModel):
+    name: str
+    email: str
+    appt_type: str
+    office_id: Optional[int] = None
+    office_name: Optional[str] = None
+    before_date: Optional[str] = None
+
+
+@app.post("/api/subscribe", status_code=201)
+async def subscribe(body: SubscribeBody):
+    if not body.name.strip():
+        raise HTTPException(400, detail="Name is required")
+    if not _EMAIL_RE.match(body.email):
+        raise HTTPException(400, detail="Invalid email address")
+    if body.appt_type not in VALID_TYPES:
+        raise HTTPException(400, detail="Invalid appointment type")
+    if body.office_id is not None and body.office_id not in _OFFICE_IDS:
+        raise HTTPException(400, detail="Unknown office")
+    if not os.environ.get("SUPABASE_URL"):
+        raise HTTPException(503, detail="Notifications not configured")
+    try:
+        sub = await create_subscription(
+            name=body.name.strip(),
+            email=body.email,
+            appt_type=body.appt_type,
+            office_id=body.office_id or None,
+            office_name=body.office_name or None,
+            before_date=body.before_date or None,
+        )
+        return {"ok": True, "id": sub["id"]}
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
+
+
+@app.get("/api/unsubscribe")
+async def unsubscribe(token: str = Query(...)):
+    if not os.environ.get("SUPABASE_URL"):
+        raise HTTPException(503, detail="Notifications not configured")
+    ok = await deactivate_subscription(token)
+    if not ok:
+        return HTMLResponse("<p style='font-family:sans-serif'>Link not found or already unsubscribed.</p>", status_code=404)
+    return HTMLResponse("""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Unsubscribed</title>
+<style>body{font-family:-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f7f7f5}
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:32px 36px;text-align:center;max-width:360px}
+h2{margin:0 0 8px;font-size:18px;color:#111}p{margin:0;font-size:13.5px;color:#666}</style></head>
+<body><div class="card"><h2>Unsubscribed</h2><p>You won't receive any more DMV slot alerts.</p></div></body></html>""")
 
 
 @app.get("/api/health")
